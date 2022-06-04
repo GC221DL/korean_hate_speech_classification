@@ -2,14 +2,14 @@
 python interactive.py
 """
 import torch
-from transformers import AutoTokenizer, BertForSequenceClassification
+from transformers import AutoTokenizer, BertForSequenceClassification, ElectraForSequenceClassification
 from transformers import TextClassificationPipeline
 
-model_name = 'beomi/kcbert-base'
+model_name = 'beomi/KcELECTRA-base'
 
-ckpt_name = "model_save/Hate_Speach-beomi-kcbert-base-10_private_shuffle.pt"
+ckpt_name = "model_save/Hate_Speach-beomi-KcELECTRA-base-11_private_shuffle.pt"
 
-model = BertForSequenceClassification.from_pretrained(
+model = ElectraForSequenceClassification.from_pretrained(
     model_name,
     num_labels=15,
     problem_type="multi_label_classification"

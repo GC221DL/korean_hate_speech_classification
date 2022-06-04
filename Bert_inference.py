@@ -57,7 +57,7 @@ concat_dataset=concat_dataset.sample(frac=1).reset_index(drop=True)
 model_name = 'beomi/KcELECTRA-base'
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-ckpt_name = 'model_save/Hate_Speach-beomi-kcbert-base-10_private_shuffle.pt'
+# ckpt_name = 'model_save/Hate_Speach-beomi-kcbert-base-10_private_shuffle.pt'
 ckpt_name = "model_save/Hate_Speach-beomi-KcELECTRA-base-11_private_shuffle.pt"
 model = ElectraForSequenceClassification.from_pretrained(
     model_name,
