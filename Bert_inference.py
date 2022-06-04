@@ -8,49 +8,65 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, BertForSequenceClassification
 from sklearn.metrics import label_ranking_average_precision_score
+import os
+import random
+
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+random_seed = 1234
+torch.manual_seed(random_seed)
+torch.cuda.manual_seed(random_seed)
+torch.cuda.manual_seed_all(random_seed) # if use multi-GPU
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(random_seed)
+random.seed(random_seed)
 
 model_name = 'beomi/kcbert-base'
 
-ckpt_name = "model_save/Hate_Speach-beomi-kcbert-base-20.pt"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+ckpt_name = "model_save/Hate_Speach-beomi-kcbert-base-20_private_shuffle.pt"
 model = BertForSequenceClassification.from_pretrained(
     model_name,
-    num_labels=10,
+    num_labels=15,
     problem_type="multi_label_classification"
 ).cuda()
 
-unsmile_labels = ["여성/가족","남성","성소수자","인종/국적","연령","지역","종교","기타 혐오","악플/욕설","clean"]
-num_labels = len(unsmile_labels)
+unsmile_data = pd.read_csv('data/unsmile_valid_v1.0.tsv', delimiter='\t')    # 15005
+private_data = pd.read_csv('data/private_test.tsv', delimiter='\t',header = None)
+private_data.columns = ['문장', 'name', 'number', 'address', 'bank', 'person']
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+private_data=private_data.sample(frac=1).reset_index(drop=True)
+# private_test_data = private_data[int(len(private_data)*0.8):]     # 600
+# private_data = private_data[:int(len(private_data)*0.8)]          # 2400
 
+concat_data = pd.concat([unsmile_data,private_data], axis=0)
+concat_data = concat_data.fillna(0.0)
+concat_data = concat_data.reset_index()
 
-model.load_state_dict(torch.load(ckpt_name, map_location="cpu"))
-model.cuda()
+concat_labels = ["여성/가족","남성","성소수자","인종/국적","연령","지역","종교","기타 혐오","악플/욕설",'clean','name', 'number', 'address', 'bank', 'person']
 
-## data
-test_data = pd.read_csv('data/unsmile_valid_v1.0.tsv', delimiter='\t')
+concat_num_labels = len(concat_labels) # 15
 
-unsmile_labels = ["여성/가족","남성","성소수자","인종/국적","연령","지역","종교","기타 혐오","악플/욕설","clean"]
-num_labels = len(unsmile_labels)
+concat_data_labels_df = concat_data[concat_labels]
+concat_data_labels_df = concat_data_labels_df.astype(float)
 
-labels_df = test_data[["여성/가족","남성","성소수자","인종/국적","연령","지역","종교","기타 혐오","악플/욕설","clean"]]
-labels_df = labels_df.astype(float)
+concat_label = []
 
-label = []
+for i in range(len(concat_data["여성/가족"])):
+    concat_label.append([np.array(concat_data_labels_df.iloc[i], dtype=np.float64)])
 
-for i in range(len(test_data["여성/가족"])):
+concat_label_data = pd.DataFrame(concat_label, columns = ['label'])
 
-    label.append([np.array(labels_df.iloc[i], dtype=np.float64)])
+concat_data.rename(columns={'문장':'sentence'}, inplace=True)
 
-label_data = pd.DataFrame(label, columns = ['label'])
-
-test_data.rename(columns={'문장':'sentence'}, inplace=True)
-
-dataset = pd.concat([test_data['sentence'], label_data['label']], axis=1)
+concat_dataset = pd.concat([concat_data['sentence'], concat_label_data['label']], axis=1)
+concat_dataset=concat_dataset.sample(frac=1).reset_index(drop=True)
+# concat_dataset.to_csv('data/concat_dataset.csv', sep='\t', index = False)
 
 test_text, test_labels = (
-    dataset["sentence"].values,
-    dataset["label"].values,
+    concat_dataset["sentence"].values,
+    concat_dataset["label"].values,
 )
 
 dataset = [
@@ -66,22 +82,24 @@ test_loader = DataLoader(
     pin_memory=True,
 )
 
-for data in tqdm(test_loader):
-    text, label = data["data"], data["label"]
-    tokens = tokenizer(
-        text,
-        return_tensors="pt",
-        truncation=True,
-        padding=True,
-    )
+with torch.no_grad():
+    model.eval() 
+    for data in tqdm(test_loader):
+        text, label = data["data"], data["label"]
+        tokens = tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            padding=True,
+        )
 
-    input_ids = tokens.input_ids.cuda()
-    attention_mask = tokens.attention_mask.cuda()
+        input_ids = tokens.input_ids.cuda()
+        attention_mask = tokens.attention_mask.cuda()
 
-    output = model.forward(
-        input_ids=input_ids,
-        attention_mask=attention_mask,
-    )
-    classification_results = output.logits
+        output = model.forward(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+        )
+        classification_results = output.logits
 
 print({'test': label_ranking_average_precision_score(label.detach().cpu().numpy(), classification_results.detach().cpu().numpy())})
