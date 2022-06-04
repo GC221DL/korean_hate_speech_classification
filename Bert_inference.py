@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, BertForSequenceClassification
+from transformers import AutoTokenizer, ElectraForSequenceClassification, BertForSequenceClassification
 from sklearn.metrics import label_ranking_average_precision_score
 import os
 import random
@@ -21,24 +21,14 @@ torch.backends.cudnn.benchmark = False
 np.random.seed(random_seed)
 random.seed(random_seed)
 
-model_name = 'beomi/kcbert-base'
-
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-ckpt_name = "model_save/Hate_Speach-beomi-kcbert-base-20_private_shuffle.pt"
-model = BertForSequenceClassification.from_pretrained(
-    model_name,
-    num_labels=15,
-    problem_type="multi_label_classification"
-).cuda()
-
-unsmile_data = pd.read_csv('data/unsmile_valid_v1.0.tsv', delimiter='\t')    # 15005
+## data
+unsmile_data = pd.read_csv('data/unsmile_valid_v1.0.tsv', delimiter='\t')  
 private_data = pd.read_csv('data/private_test.tsv', delimiter='\t',header = None)
 private_data.columns = ['문장', 'name', 'number', 'address', 'bank', 'person']
 
 private_data=private_data.sample(frac=1).reset_index(drop=True)
-# private_test_data = private_data[int(len(private_data)*0.8):]     # 600
-# private_data = private_data[:int(len(private_data)*0.8)]          # 2400
+# private_test_data = private_data[int(len(private_data)*0.8):]    
+# private_data = private_data[:int(len(private_data)*0.8)]         
 
 concat_data = pd.concat([unsmile_data,private_data], axis=0)
 concat_data = concat_data.fillna(0.0)
@@ -63,6 +53,21 @@ concat_data.rename(columns={'문장':'sentence'}, inplace=True)
 concat_dataset = pd.concat([concat_data['sentence'], concat_label_data['label']], axis=1)
 concat_dataset=concat_dataset.sample(frac=1).reset_index(drop=True)
 # concat_dataset.to_csv('data/concat_dataset.csv', sep='\t', index = False)
+
+model_name = 'beomi/KcELECTRA-base'
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+ckpt_name = 'model_save/Hate_Speach-beomi-kcbert-base-10_private_shuffle.pt'
+ckpt_name = "model_save/Hate_Speach-beomi-KcELECTRA-base-11_private_shuffle.pt"
+model = ElectraForSequenceClassification.from_pretrained(
+    model_name,
+    num_labels=concat_num_labels,
+    problem_type="multi_label_classification"
+).cuda()
+
+model.load_state_dict(torch.load(ckpt_name, map_location="cpu"))
+model.config.id2label = {i: label for i, label in zip(range(concat_num_labels), concat_labels)}
+model.config.label2id = {label: i for i, label in zip(range(concat_num_labels), concat_labels)}
 
 test_text, test_labels = (
     concat_dataset["sentence"].values,

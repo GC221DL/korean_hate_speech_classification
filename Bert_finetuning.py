@@ -65,6 +65,7 @@ model = BertForSequenceClassification.from_pretrained(
     num_labels=concat_num_labels,
     problem_type="multi_label_classification"
 ).cuda()
+
 model.config.id2label = {i: label for i, label in zip(range(concat_num_labels), concat_labels)}
 model.config.label2id = {label: i for i, label in zip(range(concat_num_labels), concat_labels)}
 
@@ -78,8 +79,6 @@ train_text, train_labels = (
     train_data["sentence"].values,
     train_data["label"].values,
 )
-
-# print(train_labels)
 
 dataset = [
     {"data": t, "label": l}
@@ -103,6 +102,7 @@ dataset = [
     {"data": t, "label": l}
     for t, l in zip(eval_text, eval_labels)
 ]
+
 eval_loader = DataLoader(
     dataset,
     batch_size=64,
@@ -141,15 +141,10 @@ for epoch in range(epochs):
         optimizer.step()
         classification_results = output.logits
         
-        # lrap_score = 0
-        # lrap_score += label_ranking_average_precision_score(label.detach().cpu().numpy(), classification_results.detach().cpu().numpy())
-        # print(label_ranking_average_precision_score(label.detach().cpu().numpy(), classification_results.detach().cpu().numpy()))
-        # print(len(classification_results))
     print({'train_lrap': label_ranking_average_precision_score(label.detach().cpu().numpy(), classification_results.detach().cpu().numpy())})
     print({"train_loss": loss.item()})
     wandb.log({"train_lrap": label_ranking_average_precision_score(label.detach().cpu().numpy(), classification_results.detach().cpu().numpy())})
     wandb.log({"train_loss": loss.item()})
-    # print({"acc": acc / len(classification_results)})   ## 탭하나 안에 넣으면 step단위로 볼수있음. 
 
     with torch.no_grad():
         model.eval() 
