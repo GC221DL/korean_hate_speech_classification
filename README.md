@@ -13,7 +13,11 @@
    - Privacy: `name`, `phone number`, `address`, `account number`, `SSN`
    - `clean` for plain text
 
+## Keynote
+- [PDF](#)
+
 ## Reference
 - [korean_unsmile_dataset](https://github.com/smilegate-ai/korean_unsmile_dataset)
 - [KcBERT](https://github.com/Beomi/KcBERT)
-- [KcElectra](https://github.com/Beomi/KcELECTRA)
+- [KcELECTRA](https://github.com/Beomi/KcELECTRA)
+
