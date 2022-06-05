@@ -6,6 +6,8 @@
  - [KcBERT Model](https://huggingface.co/momo/KcBERT-base_Hate_speech_Privacy_Detection)
  - [KcElectra Model](https://huggingface.co/momo/KcELECTRA-base_Hate_speech_Privacy_Detection)
 
+## Hugging Face 🤗
+- [KoreanHateSpeechClassifier](https://huggingface.co/spaces/momo/Hate_speech_Privacy_Detection)
 
 ## Dataset's Metadata
 - Model classify 15 lables as below.
