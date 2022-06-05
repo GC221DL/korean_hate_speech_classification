@@ -6,14 +6,14 @@
  - [KcBERT Model](https://huggingface.co/momo/KcBERT-base_Hate_speech_Privacy_Detection)
  - [KcElectra Model](https://huggingface.co/momo/KcELECTRA-base_Hate_speech_Privacy_Detection)
 
-## Hugging Face 🤗
-- [KoreanHateSpeechClassifier](https://huggingface.co/spaces/momo/Hate_speech_Privacy_Detection)
-
 ## Dataset's Metadata
 - Model classify 15 lables as below.
    - unSmile: `feminine/family`, `Male`, `LGTM`, `rasism/nationality`, `age`, `region`, `religion`, `assults`, `etc.`
    - Privacy: `name`, `phone number`, `address`, `account number`, `SSN`
    - `clean` for plain text
+
+## Hugging Face 🤗
+- [KoreanHateSpeechClassifier](https://huggingface.co/spaces/momo/Hate_speech_Privacy_Detection)
 
 ## Keynote
 - [PDF](#)
