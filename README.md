@@ -18,6 +18,9 @@
 ## Keynote
 - [PDF](#)
 
+## Wandb
+- [Link](https://wandb.ai/momozzing/Hate_Speach?workspace=user-momozzing)
+
 ## Reference
 - [korean_unsmile_dataset](https://github.com/smilegate-ai/korean_unsmile_dataset)
 - [KcBERT](https://github.com/Beomi/KcBERT)
