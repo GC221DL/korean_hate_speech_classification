@@ -12,7 +12,7 @@
    - Privacy: `name`, `phone number`, `address`, `account number`, `SSN`
    - `clean` for plain text
 
-## Hugging Face 🤗
+## Hugging Face Demo🤗
 - [KoreanHateSpeechClassifier](https://huggingface.co/spaces/momo/Hate_speech_Privacy_Detection)
 
 ## Keynote
